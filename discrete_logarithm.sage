@@ -1,9 +1,9 @@
-def pp_table(titles, rows):
+def pp_table(titles, rows, prefix=""):
     rows = list(rows)
     row_lens = [max((len(str(row[ix])) for row in ([titles] + rows))) for ix in range(len(rows[0]))]
 
     def print_row(r):
-        s = "|"
+        s = f"{prefix}|"
         for ix, x in enumerate(r):
             s += f" {str(x).rjust(row_lens[ix])} |"
         print(s)
@@ -14,6 +14,93 @@ def pp_table(titles, rows):
         print_row(row)
 
     print()
+
+def pohlig_hellman(a, b, p=None):
+    p = a.modulus()
+    assert p == b.modulus()
+
+    factors = factor(p-1)
+
+    print(f"Prime factorization of {p-1} is {' * '.join([f'{f[0]}^{f[1]}' for f in factors])}")
+    print()
+
+    answer_mod = {}
+    for prime, max_power in factors:
+        print(f"Computing result (mod {prime**max_power})")
+
+        print(f"  Write result = {' + '.join([f'{prime**p}r_{p}' for p in range(max_power)])} (mod {prime**max_power})")
+        print(f"  Where 0 <= r_i < {prime}")
+        print()
+
+        pbits = []
+
+        for power in range(1, max_power+1):
+            mod = prime**power
+            f = (p-1)//mod
+
+            rhs = a**f
+            lhs = 1
+
+            print(f"  Computing result (mod {mod})")
+
+            for ix in range(power-1):
+                lhs *= b**(f*pbits[ix]*prime**ix)
+
+            print(f"  Find r_{power-1} st. {rhs} = {sum([x*(prime**ix) for ix, x in enumerate(pbits)])} + {prime**(power-1)}*r_{power-1} (mod {mod})")
+
+            vals = []
+            for candidate in range(prime):
+                final = lhs * b**(f*candidate*prime**(power-1))
+                vals.append(final)
+
+                if final == rhs:
+                    pbits.append(candidate)
+                    break
+            else:
+                assert False
+
+            pp_table((f"r_{power-1}", f"{sum([x*(prime**ix) for ix, x in enumerate(pbits[:-1])])} + {prime**(power-1)}*r_{power-1}"), enumerate(vals), prefix="  ")
+            print(f"  r_{power-1} = {pbits[-1]}")
+            print()
+
+        overall = 0
+        for ix, x in enumerate(pbits):
+            overall += x * prime**ix
+        answer_mod[prime**max_power] = overall
+
+        print(f"  result = {' + '.join([f'{prime**p}*{pbits[p]}' for p in range(max_power)])} (mod {prime**max_power})")
+        print(f"  result = {overall} (mod {prime**max_power})")
+        print()
+
+
+    print("Combining moduli with SRT")
+
+    final_answer = 0
+    current_mod = 1
+
+    for base, modulus in answer_mod.items():
+        m = current_mod
+        n = base
+
+        y, c, d = xgcd(m, n)
+        assert y == 1
+
+        a = final_answer
+        b = modulus
+
+        final_answer = b*c*m + a*d*n
+
+        current_mod = m * n
+
+        if m != 1:
+            print(f"  1 = {c}*{m} + {d}*{n}")
+            print(f"  a={a}, b={b}, c={c}, d={d}, m={m}, n={n}")
+            print(f"  result = {b}*{c}*{m} + {a}*{d}*{n} (mod {current_mod})")
+
+            print(f"  result = {final_answer % current_mod} (mod {current_mod})")
+            print()
+
+    return final_answer % (p-1)
 
 def baby_step_giant_step(a, b):
     p = a.modulus()
