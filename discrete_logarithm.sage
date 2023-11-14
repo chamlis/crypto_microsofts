@@ -164,7 +164,14 @@ def pollard_rho(a, b):
                 b, c = field(value[1]), field(value[2])
                 b_prime, c_prime = field(next_values[1]), field(next_values[2])
 
-                result = (b - b_prime)/(c_prime - c)
+                denominator = c_prime - c
+
+                if gcd(denominator, p-1) != 1:
+                    # TODO: write a real cycle-detector
+                    assert False
+                    continue
+
+                result = (b - b_prime)/denominator
 
                 pp_table(("G_i", "b_i", "c_i"), values)
 
