@@ -25,7 +25,7 @@ def baby_step_giant_step(a, b):
     print(f"Range is {0}--{bound}")
     print()
 
-    x = b**(-sqrt(l))
+    x = b**(-bound)
 
     b = [b**i for i in range(bound)]
 
