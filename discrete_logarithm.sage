@@ -168,6 +168,7 @@ def pollard_rho(a, b):
 
                 if gcd(denominator, p-1) != 1:
                     # TODO: write a real cycle-detector
+                    return None
                     assert False
                     continue
 
@@ -181,3 +182,17 @@ def pollard_rho(a, b):
                 print(f"a = {result}")
 
                 return result
+
+def _test_dlp():
+    algs = (pohlig_hellman, baby_step_giant_step, pollard_rho)
+
+    for ix in range(100):
+        p = random_prime(100000)
+        fp = FiniteField(p)
+        g = fp.multiplicative_generator()
+        a = fp.random_element()
+
+        correct = discrete_log(a, g)
+        results = [alg(a, g) for alg in algs]
+
+        assert all(map(lambda r: r is None or r == correct, results))
