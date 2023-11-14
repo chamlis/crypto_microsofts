@@ -16,8 +16,8 @@ def pp_table(titles, rows):
     print()
 
 def baby_step_giant_step(a, b):
-    p = a.base_ring().order()
-    assert p == b.base_ring().order()
+    p = a.modulus()
+    assert p == b.modulus()
 
     l = p-1
     bound = ceil(sqrt(l))
@@ -50,8 +50,8 @@ def baby_step_giant_step(a, b):
     return None
 
 def pollard_rho(a, b):
-    p = a.base_ring().order()
-    assert p == b.base_ring().order()
+    p = a.modulus()
+    assert p == b.modulus()
 
     values = [(b, 1, 0)]
 
