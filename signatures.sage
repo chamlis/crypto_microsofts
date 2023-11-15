@@ -24,3 +24,9 @@ def elgamal_verify(m, r, sig, g, p_k, p):
     other_side = p_k^r * r^sig
 
     return g_m == other_side
+
+def rsa_sign(m, d, n):
+    return (m^d) % n
+
+def rsa_verify(m, sig, e, n):
+    return (m % n) == ((sig^e) % n)
