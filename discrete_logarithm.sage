@@ -15,13 +15,14 @@ def pp_table(titles, rows, prefix=""):
 
     print()
 
-def pohlig_hellman(a, b, p=None):
-    p = a.modulus()
-    assert p == b.modulus()
+def pohlig_hellman(a, b):
+    p = b.modulus()
+    group = Integers(p)
+    order = b.multiplicative_order()
 
-    factors = factor(p-1)
+    factors = factor(order)
 
-    print(f"Prime factorization of {p-1} is {' * '.join([f'{f[0]}^{f[1]}' for f in factors])}")
+    print(f"Prime factorization of {order-1} is {' * '.join([f'{f[0]}^{f[1]}' for f in factors])}")
     print()
 
     answer_mod = {}
@@ -36,9 +37,9 @@ def pohlig_hellman(a, b, p=None):
 
         for power in range(1, max_power+1):
             mod = prime**power
-            f = (p-1)//mod
+            f = (order)//mod
 
-            rhs = a**f
+            rhs = group(a**f)
             lhs = 1
 
             print(f"  Computing result (mod {mod})")
@@ -100,13 +101,12 @@ def pohlig_hellman(a, b, p=None):
             print(f"  result = {final_answer % current_mod} (mod {current_mod})")
             print()
 
-    return final_answer % (p-1)
+    return final_answer % order
 
 def baby_step_giant_step(a, b):
-    p = a.modulus()
-    assert p == b.modulus()
+    order = b.multiplicative_order()
 
-    l = p-1
+    l = order-1
     bound = ceil(sqrt(l))
 
     print(f"Range is {0}--{bound}")
@@ -137,8 +137,7 @@ def baby_step_giant_step(a, b):
     return None
 
 def pollard_rho(a, b):
-    p = a.modulus()
-    assert p == b.modulus()
+    order = b.multiplicative_order()
 
     values = [(b, 1, 0)]
 
@@ -160,17 +159,18 @@ def pollard_rho(a, b):
 
         for ix, value in enumerate(values[:-1]):
             if value[0] == next_values[0]:
-                field = Integers(p-1)
+                field = Integers(order)
                 b, c = field(value[1]), field(value[2])
                 b_prime, c_prime = field(next_values[1]), field(next_values[2])
 
                 denominator = c_prime - c
 
-                if gcd(denominator, p-1) != 1:
-                    # TODO: write a real cycle-detector
+                if denominator == 0:
                     return None
-                    assert False
-                    continue
+
+                if gcd(denominator, order) != 1:
+                    # TODO: proper cycle detector
+                    return None
 
                 result = (b - b_prime)/denominator
 
