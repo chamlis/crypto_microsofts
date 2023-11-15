@@ -192,7 +192,12 @@ def _test_dlp():
         g = fp.multiplicative_generator()
         a = fp.random_element()
 
-        correct = discrete_log(a, g)
-        results = [alg(a, g) for alg in algs]
+
+        try:
+            correct = discrete_log(a, g)
+            results = [alg(a, g) for alg in algs]
+        except Exception as e:
+            print(f"Error running {g} {a} {p}")
+            raise e
 
         assert all(map(lambda r: r is None or r == correct, results))
