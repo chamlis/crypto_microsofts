@@ -106,8 +106,7 @@ def pohlig_hellman(a, b):
 def baby_step_giant_step(a, b):
     order = b.multiplicative_order()
 
-    l = order-1
-    bound = ceil(sqrt(l))
+    bound = ceil(sqrt(order))
 
     print(f"Range is {0}--{bound}")
     print()
