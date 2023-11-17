@@ -182,8 +182,86 @@ def pollard_rho(a, b):
 
                 return result
 
+def index_calculus(a, b, factor_base):
+    p = a.modulus()
+    assert p == b.modulus()
+    fp = FiniteField(p)
+    fp1 = Integers(p-1)
+
+    eqns = []
+    ans = []
+
+    sol = None
+    for ix in range(p):
+        factors = factor(ZZ(b^ix))
+
+        if len(factors) == 0 or not all(map(lambda x: x[0] in factor_base, factors)):
+            continue
+
+        """if gcd(p-1, ix) != 1:
+            continue"""
+        """try:
+            i = fp1(ix).inverse()
+        except:
+            continue"""
+
+        eqn = [0 for _ in range(len(factor_base))]# + [fp1(ix)]
+        for prime, power in factors:
+            eqn[factor_base.index(prime)] = fp1(power)
+
+        eqns.append(eqn)
+        ans.append((fp1(ix),))
+
+        if len(eqns) >= len(factor_base):
+            m = Matrix(eqns)
+            try:
+                sol = m.solve_right(Matrix(ans))
+                print(m)
+                print(ans)
+                break
+            except:
+                continue
+
+    if sol is None:
+        return None
+
+    factor_base_logs = [sol[ix][0] for ix in range(len(factor_base))]
+
+    print(factor_base_logs)
+
+    # TODO: don't do this
+    correct_factor_base_logs = [discrete_log(f, b) for f in factor_base]
+
+    if factor_base_logs != correct_factor_base_logs:
+        print("Wrong factor base logs :(")
+        print(f"Should be {correct_factor_base_logs}")
+
+    factor_base_logs = correct_factor_base_logs
+
+    for ix in range(1, p+1):
+        factors = factor(ZZ(b^ix * a))
+
+        if len(factors) == 0 or not all(map(lambda x: x[0] in factor_base, factors)):
+            continue
+
+        result = 0
+        for prime, power in factors:
+            result += power * factor_base_logs[factor_base.index(prime)]
+
+        result -= ix
+
+        result = ZZ(result) % (p-1)
+
+        return result
+
+
 def _test_dlp():
-    algs = (pohlig_hellman, baby_step_giant_step, pollard_rho)
+    algs = (
+        pohlig_hellman,
+        baby_step_giant_step,
+        pollard_rho,
+        lambda a, b: index_calculus(a, b, (2,3,5))
+    )
 
     for ix in range(100):
         p = random_prime(100000)
