@@ -103,8 +103,9 @@ def pohlig_hellman(a, b):
 
     return final_answer % order
 
-def baby_step_giant_step(a, b):
-    order = b.multiplicative_order()
+def baby_step_giant_step(a, b, order=None):
+    if order is None:
+        order = b.multiplicative_order()
 
     bound = ceil(sqrt(order))
 
